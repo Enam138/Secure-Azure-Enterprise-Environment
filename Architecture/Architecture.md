@@ -1,3 +1,4 @@
+# Enterprise Architecture Design Document
 
 # Secure Azure Enterprise Environment
 
@@ -258,4 +259,279 @@ The architecture provides a secure foundation that can accommodate additional Az
 
 Future resources can be integrated into the existing network and security model while maintaining consistency with Microsoft's best practices.
 
-**Next Section:** *Solution Overview and Component Architecture*
+# 9. Solution Overview
+
+## Overview
+
+The Secure Azure Enterprise Environment was designed as a foundational cloud infrastructure that prioritizes security, governance, and scalability.
+
+The solution follows Microsoft's recommended cloud architecture by combining identity, network segmentation, private connectivity, encryption, and secure secret management into a cohesive environment.
+
+Rather than exposing Azure platform services directly to the public internet, sensitive resources are accessed through Azure Private Link and Private Endpoints. Administrative access is controlled using Microsoft Entra ID and Azure Role-Based Access Control (RBAC), while Network Security Groups (NSGs) provide an additional layer of network protection.
+
+The resulting architecture establishes a secure landing zone capable of supporting future enterprise workloads while reducing the overall attack surface.
+
+# 10. Solution Architecture
+
+The diagram below illustrates the implemented Azure environment.
+
+<p align="center">
+
+<img width="1536" height="1024" alt="ChatGPT Image Jul 17, 2026, 12_45_24 AM" src="https://github.com/user-attachments/assets/b3d45b02-c634-48ee-8ebd-bc2a619385a4" />
+
+</p>
+
+The architecture demonstrates how Azure identity, networking, storage, and security services work together to implement Microsoft's defense-in-depth strategy.
+
+The design consists of five primary layers:
+
+- Identity Layer
+- Resource Organization Layer
+- Network Layer
+- Platform Services Layer
+- Security Layer
+
+Each layer contributes independently to the overall security posture of the environment.
+
+# 11. Component Architecture
+
+The implemented solution consists of several Azure services that work together to provide secure cloud infrastructure.
+
+| Component | Purpose |
+|------------|---------|
+| Microsoft Entra ID | Identity provider for Azure authentication |
+| Azure Subscription | Administrative and billing boundary |
+| Resource Group | Logical organization of Azure resources |
+| Azure Virtual Network | Secure network boundary |
+| Network Security Groups | Network traffic filtering |
+| Azure Storage Account | Secure cloud storage |
+| Azure Key Vault | Secure secret management |
+| Azure Private Endpoint | Private connectivity to Azure services |
+| Private DNS Zone | Private name resolution |
+| Azure RBAC | Authorization and least-privilege access |
+
+Each component was selected because it contributes to Microsoft's layered security model rather than functioning as an isolated security control.
+
+# 12. Identity Architecture
+
+## Overview
+
+Identity forms the foundation of Microsoft's Zero Trust security model.
+
+This implementation uses **Microsoft Entra ID** for authentication and **Azure Role-Based Access Control (RBAC)** for authorization.
+
+Authentication verifies the identity of a user attempting to access Azure resources, while RBAC determines the actions that authenticated users are permitted to perform.
+
+Separating authentication from authorization improves security and simplifies access management across Azure resources.
+
+## Authentication
+
+Authentication is provided through Microsoft Entra ID.
+
+All administrative access to the Azure environment is authenticated through Azure's centralized identity platform.
+
+Benefits include:
+
+- Centralized identity management
+- Single identity across Azure resources
+- Integration with Azure RBAC
+- Enterprise-grade authentication
+
+## Authorization
+
+Authorization is implemented using Azure RBAC.
+
+Rather than assigning unrestricted permissions, Azure RBAC enables permissions to be granted based on predefined roles.
+
+For this project, the **Key Vault Administrator** role was assigned to allow secure management of Azure Key Vault resources.
+
+This approach aligns with Microsoft's recommendation to implement least-privilege access wherever possible.
+
+## Identity Flow
+
+```text
+              User
+
+               ↓
+
+       Microsoft Entra ID
+
+               ↓
+
+         Authentication
+
+                ↓
+
+            Azure RBAC
+
+                ↓
+
+     Authorized Azure Resource
+```
+
+This layered identity model ensures that authentication occurs before authorization decisions are evaluated.
+
+# 13. Resource Organization
+
+All resources were deployed into a dedicated Resource Group.
+
+```text
+rg-contoso-prod-001
+```
+
+Using a Resource Group provides several operational advantages.
+
+### Benefits
+
+- Simplifies resource deployment
+- Centralizes administration
+- Supports Azure RBAC assignments
+- Enables lifecycle management
+- Improves cost tracking
+- Simplifies resource discovery
+
+Standardized naming conventions and resource tagging were applied to improve governance and maintain consistency across the environment.
+
+# 14. Network Architecture
+
+## Overview
+
+The Azure Virtual Network provides the primary network boundary for the environment.
+
+The network was designed to separate workloads into dedicated subnets, reducing unnecessary communication between resources while supporting Microsoft's defense-in-depth strategy.
+
+## Address Space
+
+```
+10.10.0.0/16
+```
+
+The selected address space provides sufficient capacity for future expansion while maintaining a simple addressing scheme.
+
+## Network Segmentation
+
+The Virtual Network contains four dedicated subnets.
+
+| Subnet | Purpose |
+|---------|----------|
+| Management | Administrative resources |
+| Application | Business applications |
+| Data | Backend services |
+| Private Endpoint | Azure Private Link resources |
+
+Each subnet isolates a specific workload category.
+
+This design improves security by limiting lateral movement and allowing network policies to be applied independently.
+
+## Network Security Groups
+
+Dedicated Network Security Groups were associated with the Management, Application, and Data subnets.
+
+These NSGs provide an additional layer of security by controlling inbound and outbound network traffic.
+
+Benefits include:
+
+- Traffic filtering
+- Reduced attack surface
+- Improved network isolation
+- Layered network security
+
+## Traffic Flow
+
+The network architecture follows a controlled communication model.
+
+```text
+                Administrator
+
+                     ↓
+
+              Microsoft Entra ID
+
+                     ↓
+
+                 Azure RBAC
+
+                     ↓
+
+           Azure Virtual Network
+
+                     ↓
+
+           Network Security Groups
+
+                     ↓
+
+              Azure Resources
+```
+
+Traffic destined for Azure Storage and Azure Key Vault is redirected through Azure Private Endpoints rather than traversing the public internet.
+
+# 15. Storage Architecture
+
+Azure Storage provides secure cloud-based storage for enterprise workloads.
+
+The Storage Account was configured using Microsoft's recommended security settings.
+
+### Implemented Security Controls
+
+- Encryption at rest enabled
+- Secure transfer required
+- Azure-managed encryption keys
+- Private Endpoint connectivity
+- Public network access disabled
+
+Together, these controls ensure that stored data remains protected while restricting network access to authorized private connections.
+
+## Storage Connectivity
+
+```text
+             Azure Virtual Network
+
+                       ↓
+
+                 Private Endpoint
+
+                        ↓
+
+              Azure Storage Account
+```
+
+This communication path remains entirely within Microsoft's private backbone network.
+
+# 16. Key Vault Architecture
+
+Azure Key Vault provides centralized storage for sensitive information, including application secrets.
+
+The service eliminates the need to store secrets directly within application code or configuration files.
+
+## Implemented Security Controls
+
+- Azure RBAC authorization model
+- Secure secret storage
+- Private Endpoint
+- Private DNS integration
+- Public network access disabled
+
+## Secret Management
+
+A test secret was successfully created and stored within Azure Key Vault to validate secure secret management functionality.
+
+Only authorized users with appropriate Azure RBAC permissions can manage or retrieve stored secrets.
+
+## Key Vault Connectivity
+
+```text
+               Azure Virtual Network
+
+                        ↓
+
+                 Private Endpoint
+
+                        ↓
+
+                  Azure Key Vault
+```
+
+This configuration ensures that Azure Key Vault remains accessible only through private network connectivity.
+
+**Next Section:** *Private Connectivity, Security Architecture, Zero Trust Alignment, Design Decisions, Risk Analysis, Validation, and Conclusion*
